@@ -23,19 +23,15 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/listings", require("./routes/listing"));
 app.use("/api/upload", require("./routes/upload"));
 app.use("/api/orders", require("./routes/order"));
+app.use("/api/chat", require("./routes/chat"));
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "OK" });
 });
 
 // Socket.io (sẽ thêm dần)
-io.on("connection", (socket) => {
-  console.log("⚡ User connected:", socket.id);
-
-  socket.on("disconnect", () => {
-    console.log("❌ User disconnected:", socket.id);
-  });
-});
+const chatHandler = require("./socket/chatHandler");
+chatHandler(io);
 
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {
