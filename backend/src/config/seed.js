@@ -155,25 +155,25 @@ const seed = async () => {
   try {
     await connectDB();
 
-    const seller =
-      (await User.findOne({ role: "seller" })) ||
-      (await User.create({
-        email: "seller.demo@ebay.local",
-        password: "123456",
-        name: "Demo Seller",
-        username: "demo_seller",
-        role: "seller",
-      }));
+    await User.deleteMany({
+      email: { $in: ["seller.demo@ebay.local", "buyer.demo@ebay.local"] },
+    });
 
-    const buyer =
-      (await User.findOne({ role: "buyer" })) ||
-      (await User.create({
-        email: "buyer.demo@ebay.local",
-        password: "123456",
-        name: "Demo Buyer",
-        username: "demo_buyer",
-        role: "buyer",
-      }));
+    const seller = await User.create({
+      email: "seller.demo@ebay.local",
+      password: "123456",
+      name: "Demo Seller",
+      username: "demo_seller",
+      role: "seller",
+    });
+
+    const buyer = await User.create({
+      email: "buyer.demo@ebay.local",
+      password: "123456",
+      name: "Demo Buyer",
+      username: "demo_buyer",
+      role: "buyer",
+    });
 
     await Review.deleteMany({});
     await Order.deleteMany({});
