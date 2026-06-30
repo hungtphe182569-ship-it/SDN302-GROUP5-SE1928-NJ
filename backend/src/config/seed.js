@@ -1,12 +1,14 @@
 require("dotenv").config({ path: ".env" });
-console.log(process.env.MONGODB_URI);
+
 const mongoose = require("mongoose");
 const Listing = require("../models/Listing");
 const User = require("../models/User");
+const Order = require("../models/Order");
+const Review = require("../models/Review");
 
 const connectDB = async () => {
   await mongoose.connect(process.env.MONGODB_URI);
-  console.log("✅ Connected to MongoDB");
+  console.log("Connected to MongoDB");
 };
 
 const listings = [
@@ -21,7 +23,7 @@ const listings = [
     totalQuantity: 5,
     status: "active",
     isFeatured: true,
-    stats: { views: 0, watchers: 0, soldQuantity: 0 },
+    stats: { views: 0, watchers: 0, soldQuantity: 3 },
   },
   {
     title: "Dyson UP30 Ball Animal 3 | Nickel/Silver | Refurbished",
@@ -34,58 +36,7 @@ const listings = [
     totalQuantity: 3,
     status: "active",
     isFeatured: false,
-    stats: { views: 0, watchers: 0, soldQuantity: 0 },
-  },
-  {
-    title: "Ego Turbo Leaf Blower 530 Bare Tool Certified Refurbished",
-    subtitle: "Bare Tool Only",
-    description:
-      "Ego Turbo Leaf Blower 530 CFM bare tool. No battery or charger included.",
-    condition: "good",
-    images: [],
-    pricing: { currency: "VND", fixedPrice: 2871387 },
-    totalQuantity: 8,
-    status: "active",
-    isFeatured: false,
-    stats: { views: 0, watchers: 0, soldQuantity: 0 },
-  },
-  {
-    title: "DESIGN by Paul Sebastian Perfume for Women 3.4 oz",
-    subtitle: "New in Box",
-    description:
-      "DESIGN by Paul Sebastian Perfume for Women 3.4 oz New in Box.",
-    condition: "new",
-    images: [],
-    pricing: { currency: "VND", fixedPrice: 618270 },
-    totalQuantity: 10,
-    status: "active",
-    isFeatured: false,
-    stats: { views: 0, watchers: 0, soldQuantity: 0 },
-  },
-  {
-    title: "iRobot Roomba Combo i5+ Vacuum & Mop - Self-Emptying",
-    subtitle: "Certified Refurbished",
-    description:
-      "iRobot Roomba Combo i5+ robot vacuum and mop with self-emptying base.",
-    condition: "good",
-    images: [],
-    pricing: { currency: "VND", fixedPrice: 3951187 },
-    totalQuantity: 2,
-    status: "active",
-    isFeatured: true,
-    stats: { views: 0, watchers: 0, soldQuantity: 0 },
-  },
-  {
-    title: "Apple iPad 9 (2021) Space Gray Silver",
-    subtitle: "Wi-Fi 64GB",
-    description: "Apple iPad 9th generation 2021 Space Gray Silver Wi-Fi 64GB.",
-    condition: "like_new",
-    images: [],
-    pricing: { currency: "VND", fixedPrice: 4372675 },
-    totalQuantity: 4,
-    status: "active",
-    isFeatured: false,
-    stats: { views: 0, watchers: 0, soldQuantity: 0 },
+    stats: { views: 0, watchers: 0, soldQuantity: 2 },
   },
   {
     title: "Sony WH-1000XM5 Wireless Noise Canceling Headphones",
@@ -97,7 +48,7 @@ const listings = [
     totalQuantity: 6,
     status: "active",
     isFeatured: true,
-    stats: { views: 0, watchers: 0, soldQuantity: 0 },
+    stats: { views: 0, watchers: 0, soldQuantity: 4 },
   },
   {
     title: "Samsung Galaxy S23 Ultra 256GB",
@@ -110,7 +61,7 @@ const listings = [
     totalQuantity: 3,
     status: "active",
     isFeatured: true,
-    stats: { views: 0, watchers: 0, soldQuantity: 0 },
+    stats: { views: 0, watchers: 0, soldQuantity: 2 },
   },
   {
     title: "Nike Air Jordan 1 Retro High OG",
@@ -122,7 +73,7 @@ const listings = [
     totalQuantity: 1,
     status: "active",
     isFeatured: false,
-    stats: { views: 0, watchers: 0, soldQuantity: 0 },
+    stats: { views: 0, watchers: 0, soldQuantity: 1 },
   },
   {
     title: "MacBook Pro 14 inch M3 Pro 2023",
@@ -133,6 +84,18 @@ const listings = [
     images: [],
     pricing: { currency: "VND", fixedPrice: 45000000 },
     totalQuantity: 2,
+    status: "active",
+    isFeatured: true,
+    stats: { views: 0, watchers: 0, soldQuantity: 2 },
+  },
+  {
+    title: "Canon EOS R6 Mark II Mirrorless Camera",
+    subtitle: "Body Only",
+    description: "Canon EOS R6 Mark II mirrorless camera body only.",
+    condition: "new",
+    images: [],
+    pricing: { currency: "VND", fixedPrice: 52000000 },
+    totalQuantity: 1,
     status: "active",
     isFeatured: true,
     stats: { views: 0, watchers: 0, soldQuantity: 0 },
@@ -149,48 +112,131 @@ const listings = [
     isFeatured: false,
     stats: { views: 0, watchers: 0, soldQuantity: 0 },
   },
-  {
-    title: "Canon EOS R6 Mark II Mirrorless Camera",
-    subtitle: "Body Only",
-    description: "Canon EOS R6 Mark II mirrorless camera body only.",
-    condition: "new",
-    images: [],
-    pricing: { currency: "VND", fixedPrice: 52000000 },
-    totalQuantity: 1,
-    status: "active",
-    isFeatured: true,
-    stats: { views: 0, watchers: 0, soldQuantity: 0 },
-  },
 ];
+
+const reviewComments = [
+  "Item arrived quickly and matched the description. Very happy with this purchase.",
+  "Good seller, careful packaging, and the product condition is accurate.",
+  "Smooth transaction. The item works well and delivery was on time.",
+  "Exactly as listed. I would buy from this seller again.",
+  "Great value for the price. Communication was clear.",
+  "Product is clean, shipped safely, and feels reliable.",
+];
+
+const buildOrderData = ({ buyer, seller, listing, isReviewed }) => ({
+  buyerId: buyer._id,
+  sellerId: seller._id,
+  listingId: listing._id,
+  listingTitle: listing.title,
+  listingImage: listing.images?.[0] || "",
+  quantity: 1,
+  pricing: {
+    itemPrice: listing.pricing.fixedPrice,
+    quantity: 1,
+    subtotal: listing.pricing.fixedPrice,
+    shippingCost: 30000,
+    total: listing.pricing.fixedPrice + 30000,
+    currency: "VND",
+  },
+  shippingAddress: {
+    fullName: buyer.name,
+    phone: "0900000000",
+    street: "1 Demo Street",
+    city: "Ho Chi Minh City",
+    country: "Vietnam",
+  },
+  status: "delivered",
+  paymentStatus: "paid",
+  paymentMethod: "COD",
+  isReviewed,
+});
 
 const seed = async () => {
   try {
     await connectDB();
 
-    // Lấy seller đầu tiên làm sellerId
-    const seller = await User.findOne({ role: "seller" });
-    if (!seller) {
-      console.log(
-        "❌ Không tìm thấy seller, hãy register 1 tài khoản seller trước",
+    const seller =
+      (await User.findOne({ role: "seller" })) ||
+      (await User.create({
+        email: "seller.demo@ebay.local",
+        password: "123456",
+        name: "Demo Seller",
+        username: "demo_seller",
+        role: "seller",
+      }));
+
+    const buyer =
+      (await User.findOne({ role: "buyer" })) ||
+      (await User.create({
+        email: "buyer.demo@ebay.local",
+        password: "123456",
+        name: "Demo Buyer",
+        username: "demo_buyer",
+        role: "buyer",
+      }));
+
+    await Review.deleteMany({});
+    await Order.deleteMany({});
+    await Listing.deleteMany({});
+    console.log("Deleted old listings, orders, and reviews");
+
+    const insertedListings = await Listing.insertMany(
+      listings.map((listing) => ({
+        ...listing,
+        sellerId: seller._id,
+        reviews: { averageRating: 0, reviewCount: 0 },
+      })),
+    );
+
+    const reviewedOrders = await Order.insertMany(
+      insertedListings.slice(0, 6).map((listing) =>
+        buildOrderData({ buyer, seller, listing, isReviewed: true }),
+      ),
+    );
+
+    const reviewsToInsert = reviewedOrders.map((order, index) => ({
+      orderId: order._id,
+      listingId: order.listingId,
+      buyerId: buyer._id,
+      sellerId: seller._id,
+      rating: [5, 4, 5, 4, 5, 5][index],
+      comment: reviewComments[index],
+      images: [],
+      isVerifiedPurchase: true,
+    }));
+    await Review.insertMany(reviewsToInsert);
+
+    for (const listing of insertedListings) {
+      const listingReviews = reviewsToInsert.filter(
+        (review) => review.listingId.toString() === listing._id.toString(),
       );
-      process.exit(1);
+      if (listingReviews.length > 0) {
+        const averageRating =
+          listingReviews.reduce((total, review) => total + review.rating, 0) /
+          listingReviews.length;
+        listing.reviews = {
+          averageRating: Math.round(averageRating * 10) / 10,
+          reviewCount: listingReviews.length,
+        };
+        await listing.save();
+      }
     }
 
-    // Xóa listings cũ
-    await Listing.deleteMany({});
-    console.log("🗑️ Đã xóa listings cũ");
+    const testListing = insertedListings[6] || insertedListings[0];
+    const reviewTestOrder = await Order.create(
+      buildOrderData({ buyer, seller, listing: testListing, isReviewed: false }),
+    );
 
-    // Insert listings mới
-    const listingsWithSeller = listings.map((l) => ({
-      ...l,
-      sellerId: seller._id,
-    }));
-    await Listing.insertMany(listingsWithSeller);
-    console.log(`✅ Đã insert ${listings.length} listings`);
+    console.log(`Inserted ${insertedListings.length} listings`);
+    console.log(`Inserted ${reviewsToInsert.length} sample reviews`);
+    console.log("Demo accounts:");
+    console.log("  buyer.demo@ebay.local / 123456");
+    console.log("  seller.demo@ebay.local / 123456");
+    console.log(`Review test URL: http://localhost:3000/review/${reviewTestOrder._id}`);
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Lỗi:", error.message);
+    console.error("Seed error:", error.message);
     process.exit(1);
   }
 };
