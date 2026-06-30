@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Navbar from "../../components/Navbar";
+import StarRating from "../../components/StarRating";
 import api from "../../services/api";
 
 const formatPrice = (price) =>
@@ -57,6 +58,16 @@ function ProductCard({ listing }) {
         <p className="text-lg font-bold text-gray-900 mb-1">
           {formatPrice(listing.pricing.fixedPrice)}
         </p>
+        {listing.reviews?.reviewCount > 0 ? (
+          <div className="flex items-center gap-1 mb-1">
+            <StarRating value={listing.reviews.averageRating} />
+            <span className="text-xs text-gray-500">
+              ({listing.reviews.reviewCount})
+            </span>
+          </div>
+        ) : (
+          <p className="text-xs text-gray-400 mb-1">No reviews yet</p>
+        )}
         <div className="flex items-center justify-between">
           <span className="text-xs text-gray-500">
             {conditionLabel[listing.condition] || listing.condition}

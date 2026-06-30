@@ -4,6 +4,7 @@ import Navbar from "../../components/Navbar";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import ChatWidget from "../../components/ChatWidget";
+import StarRating from "../../components/StarRating";
 
 const formatPrice = (price) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
@@ -25,6 +26,7 @@ function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
     fetchListing();
@@ -33,8 +35,12 @@ function ProductDetail() {
 
   const fetchListing = async () => {
     try {
-      const res = await api.get(`/listings/${id}`);
-      setListing(res.data);
+      const [listingRes, reviewRes] = await Promise.all([
+        api.get(`/listings/${id}`),
+        api.get(`/reviews/listing/${id}`).catch(() => ({ data: [] })),
+      ]);
+      setListing(listingRes.data);
+      setReviews(reviewRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -71,6 +77,14 @@ function ProductDetail() {
       </div>
     );
   }
+
+  const reviewCount = listing.reviews?.reviewCount || reviews.length;
+  const averageRating =
+    listing.reviews?.averageRating ||
+    (reviews.length
+      ? reviews.reduce((total, review) => total + review.rating, 0) /
+        reviews.length
+      : 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -183,6 +197,22 @@ function ProductDetail() {
               <span>👁 {listing.stats?.views || 0} views</span>
               <span>❤️ {listing.stats?.watchers || 0} watchers</span>
               <span>📦 {listing.stats?.soldQuantity || 0} sold</span>
+            </div>
+
+            <div className="flex items-center gap-2 text-sm">
+              {reviewCount > 0 ? (
+                <>
+                  <StarRating value={averageRating} size="md" />
+                  <span className="font-semibold text-gray-800">
+                    {averageRating.toFixed(1)}
+                  </span>
+                  <a href="#reviews" className="text-blue-600 hover:underline">
+                    {reviewCount} review{reviewCount > 1 ? "s" : ""}
+                  </a>
+                </>
+              ) : (
+                <span className="text-gray-400">No reviews yet</span>
+              )}
             </div>
 
             {/* Seller info - ngay dưới tên sp */}
@@ -306,11 +336,62 @@ function ProductDetail() {
         </div>
 
         {/* Reviews section */}
-        <div className="bg-white rounded-xl p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-gray-800 mb-3">
+        <div id="reviews" className="bg-white rounded-xl p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-gray-800 mb-4">
             Reviews & Ratings
           </h2>
-          <p className="text-sm text-gray-400">No reviews yet.</p>
+          {reviewCount > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+              <div className="lg:col-span-1">
+                <div className="text-4xl font-bold text-gray-900">
+                  {averageRating.toFixed(1)}
+                </div>
+                <StarRating value={averageRating} size="md" className="mt-2" />
+                <p className="text-sm text-gray-500 mt-2">
+                  Based on {reviewCount} verified purchase review
+                  {reviewCount > 1 ? "s" : ""}
+                </p>
+              </div>
+
+              <div className="lg:col-span-3 divide-y divide-gray-200">
+                {reviews.map((review) => (
+                  <div key={review._id} className="py-5 first:pt-0">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <StarRating value={review.rating} />
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-sm font-semibold text-gray-800">
+                            {review.buyerId?.username || "buyer"}
+                          </span>
+                          {review.isVerifiedPurchase && (
+                            <span className="text-xs font-medium text-green-700 bg-green-50 border border-green-100 rounded-full px-2 py-0.5">
+                              Verified purchase
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-xs text-gray-400 flex-shrink-0">
+                        {new Date(review.createdAt).toLocaleDateString("vi-VN")}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-700 leading-relaxed mt-3">
+                      {review.comment}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center">
+              <p className="text-sm font-semibold text-gray-700">
+                No reviews yet
+              </p>
+              <p className="text-sm text-gray-400 mt-1">
+                Reviews will appear here after delivered orders receive buyer
+                feedback.
+              </p>
+            </div>
+          )}
         </div>
       </main>
     </div>

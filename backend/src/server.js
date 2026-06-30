@@ -23,6 +23,7 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/listings", require("./routes/listing"));
 app.use("/api/upload", require("./routes/upload"));
 app.use("/api/orders", require("./routes/order"));
+app.use("/api/reviews", require("./routes/review"));
 app.use("/api/chat", require("./routes/chat"));
 // Health check
 app.get("/api/health", (req, res) => {

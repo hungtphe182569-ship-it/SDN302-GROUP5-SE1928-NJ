@@ -10,6 +10,7 @@ import PrivacyNotice from "./pages/PrivacyNotice";
 import ProductListing from "./pages/listing/ProductListing";
 import ProductDetail from "./pages/listing/ProductDetail";
 import Checkout from "./pages/listing/Checkout";
+import ReviewOrder from "./pages/listing/ReviewOrder";
 import NotFound from "./pages/NotFound";
 import Messages from "./pages/chat/Messages";
 
@@ -26,6 +27,7 @@ function App() {
           <Route path="/listings" element={<ProductListing />} />
           <Route path="/listing/:id" element={<ProductDetail />} />
           <Route path="/checkout/:id" element={<Checkout />} />
+          <Route path="/review/:orderId" element={<ReviewOrder />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

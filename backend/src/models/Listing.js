@@ -30,6 +30,10 @@ const listingSchema = new mongoose.Schema(
       watchers: { type: Number, default: 0 },
       soldQuantity: { type: Number, default: 0 },
     },
+    reviews: {
+      averageRating: { type: Number, default: 0 },
+      reviewCount: { type: Number, default: 0 },
+    },
     shippingPolicyId: { type: mongoose.Schema.Types.ObjectId },
     returnPolicyId: { type: mongoose.Schema.Types.ObjectId },
     paymentPolicyId: { type: mongoose.Schema.Types.ObjectId },
